@@ -1,10 +1,3 @@
-[![TypeScript version][ts-badge]][typescript-38]
-[![Node.js version][nodejs-badge]][nodejs]
-[![APLv2][license-badge]][LICENSE]
-[![Build Status - Travis][travis-badge]][travis-ci]
-[![Build Status - GitHub Actions][gha-badge]][gha-ci]
-[![Sponsor][sponsor-badge]][sponsor]
-
 # node-typescript-boilerplate
 
 👩🏻‍💻 Developer Ready: A comprehensive template. Works out of the box for most [Node.js][nodejs] projects.
