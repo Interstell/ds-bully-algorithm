@@ -63,14 +63,17 @@ export class System {
     const processFileRecords = this.readProcessesFile();
     this.processes = this.createProcesses(processFileRecords);
 
+    // imitating killing process with id 5
     setTimeout(() => {
       this.processes[4].kill();
     }, 5000);
 
+    // imitating killing process with id 4
     setTimeout(() => {
       this.processes[2].kill();
     }, 10000);
 
+    // imitating killing process with id 3
     setTimeout(() => {
       this.processes[3].kill();
     }, 15000);

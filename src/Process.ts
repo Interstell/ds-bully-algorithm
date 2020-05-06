@@ -5,7 +5,7 @@ import { ProcessState } from './Process.types';
 const COORDINATOR_PING_INTERVAL = 2000; // ms here and below
 const TIME_TO_WAIT_FOR_COORDINATOR_PONG = 1000;
 const TIME_TO_WAIT_FOR_ELECTIONS_ALIVE_MESSAGE = 2000;
-const TIME_TO_WAIT_FOR_VICTORY = 3000;
+const TIME_TO_WAIT_FOR_VICTORY = 5000;
 
 const BROADCAST_EVENT_NAME = 'GENERAL';
 
@@ -50,15 +50,18 @@ export default class Process {
   };
 
   pingCoordinator = (): void => {
+    // When the system is started, there's no coordinator yet
     if (this.coordinatorId === null) {
       this.announceElection();
       return;
     }
 
+    // there's no need to ping during elections or ping ourselves
     if (this.state !== ProcessState.Idle || this.id === this.coordinatorId) {
       return;
     }
 
+    // sending PING to the current coordinator
     this.state = ProcessState.WaitingForCoordinatorPong;
     MessageBroker.emit(`MESSAGE-TO-${this.coordinatorId}`, {
       fromId: this.id,
@@ -76,6 +79,7 @@ export default class Process {
   };
 
   onPingMessageReceived = (msg: Message): void => {
+    // sending PONG back
     MessageBroker.emit(`MESSAGE-TO-${msg.fromId}`, {
       fromId: this.id,
       toId: msg.fromId,
@@ -99,7 +103,7 @@ export default class Process {
     } as Message);
 
     setTimeout(() => {
-      // It waits for responses, if no one responds for time interval T
+      // 3. It waits for responses, if no one responds for time interval T
       // then process P elects itself as a coordinator.
       if (this.state === ProcessState.WaitingForElectionsAlive) {
         this.announceMyselfAsACoordinator();
@@ -117,7 +121,7 @@ export default class Process {
     }
   };
 
-  public onElectionAliveMessageReceived(msg: Message): void {
+  onElectionAliveMessageReceived = (msg: Message): void => {
     // 5. However, if an answer is received within time T from any other process Q
     if (
       msg.fromId > this.id &&
@@ -134,23 +138,22 @@ export default class Process {
         }
       }, TIME_TO_WAIT_FOR_VICTORY);
     }
-  }
+  };
 
-  public announceMyselfAsACoordinator(): void {
-    this.coordinatorId = this.id;
+  announceMyselfAsACoordinator = (): void => {
     // 4. Then it sends a message to all lower priority number
     // processes that it is elected as their new coordinator.
     MessageBroker.emit(BROADCAST_EVENT_NAME, {
       fromId: this.id,
       type: MessageType.Victory,
     } as Message);
-  }
+  };
 
-  public onElectionVictoryMessageReceived(msg: Message): void {
+  onElectionVictoryMessageReceived = (msg: Message): void => {
     this.coordinatorId = msg.fromId;
     this.state = ProcessState.Idle;
     this.counter += 1;
-  }
+  };
 
   kill = (): void => {
     this.state = ProcessState.Dead;
@@ -159,11 +162,11 @@ export default class Process {
     MessageBroker.off(BROADCAST_EVENT_NAME, this.onMessageReceived);
   };
 
-  public toString = (): string => {
+  toString = (): string => {
     return `${this.id} | ${this.name} | coord: ${this.coordinatorId} | st: ${this.state} | K ${this.counter}`;
   };
 
-  public log = (): void => {
+  log = (): void => {
     console.log(String(this));
   };
 }
