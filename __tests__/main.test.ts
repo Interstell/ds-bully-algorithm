@@ -1,31 +1,14 @@
-import { Delays, greeter } from '../src/main';
+import { start } from '../src/main';
 
-describe('greeter function', () => {
-  // Read more about fake timers
-  // http://facebook.github.io/jest/docs/en/timer-mocks.html#content
-  jest.useFakeTimers();
-
-  const name = 'John';
-  let hello: string;
-
-  // Act before assertions
-  beforeAll(async () => {
-    const p: Promise<string> = greeter(name);
-    jest.runOnlyPendingTimers();
-    hello = await p;
+describe('start function', () => {
+  // Assert if no errors occured
+  // eslint-disable-next-line jest/expect-expect
+  beforeAll(() => {
+    process.argv[2] = '../build/src/processes.csv';
   });
 
-  // Assert if setTimeout was called properly
-  it('delays the greeting by 2 seconds', () => {
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(setTimeout).toHaveBeenLastCalledWith(
-      expect.any(Function),
-      Delays.Long,
-    );
-  });
-
-  // Assert greeter result
-  it('greets a user with `Hello, {name}` message', () => {
-    expect(hello).toBe(`Hello, ${name}`);
+  // eslint-disable-next-line jest/expect-expect
+  it('starts', () => {
+    start();
   });
 });

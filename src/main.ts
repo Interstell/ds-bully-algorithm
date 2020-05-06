@@ -4,9 +4,8 @@ import * as minimist from 'minimist';
 
 import Process from './Process';
 
-const argv = minimist(process.argv.slice(2));
-
 function readProcessesFile(): ProcessFileRecord[] {
+  const argv = minimist(process.argv.slice(2));
   const processesFileName = argv['_'][0];
   if (!processesFileName) {
     console.error(
@@ -43,12 +42,10 @@ function readProcessesFile(): ProcessFileRecord[] {
   }
 }
 
-function start(): void {
+export function start(): void {
   const processFileRecords = readProcessesFile();
   const processes = processFileRecords.map(
     ({ id, fullName }) => new Process(id, fullName),
   );
   console.log(processes);
 }
-
-start();
