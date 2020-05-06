@@ -22,14 +22,14 @@
     "typescript": "~3.8.2"
   },
   "scripts": {
-    "start": "node build/src/main.js processes.csv",
+    "start": "node build/src/index.js processes.csv",
     "clean": "rimraf coverage build tmp",
     "build": "tsc -p tsconfig.release.json",
     "build:watch": "tsc -w -p tsconfig.release.json",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
     "test:watch": "jest --watch",
-    "dev": "npm run build:watch & nodemon -q -w build build/src/main.js processes.csv"
+    "dev": "npm run build:watch & nodemon -q -w build build/src/index.js processes.csv"
   },
   "author": "UT CS",
   "license": "MIT",
