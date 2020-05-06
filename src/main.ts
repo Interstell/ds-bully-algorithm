@@ -1,32 +1,54 @@
-/**
- * Some predefined delays (in milliseconds).
- */
-export enum Delays {
-  Short = 500,
-  Medium = 2000,
-  Long = 5000,
+import * as fs from 'fs';
+import * as path from 'path';
+import * as minimist from 'minimist';
+
+import Process from './Process';
+
+const argv = minimist(process.argv.slice(2));
+
+function readProcessesFile(): ProcessFileRecord[] {
+  const processesFileName = argv['_'][0];
+  if (!processesFileName) {
+    console.error(
+      'Error: Please, pass processes_file filename as the first argument',
+    );
+    process.exit(1);
+  }
+
+  let fileContents: string;
+  try {
+    fileContents = fs.readFileSync(path.resolve(__dirname, processesFileName), {
+      encoding: 'utf-8',
+    });
+  } catch (e) {
+    console.error(`Error: File ${processesFileName} was not found.`);
+    process.exit(1);
+  }
+  try {
+    return fileContents
+      .trim()
+      .split('\n')
+      .map(line => line.split(','))
+      .map(([id, fullName]) => {
+        return {
+          id: Number(id.trim()),
+          fullName: fullName.trim(),
+        };
+      });
+  } catch (e) {
+    console.error(
+      `Error occured when parsing ${processesFileName}: something went wrong.`,
+    );
+    process.exit(1);
+  }
 }
 
-/**
- * Returns a Promise<string> that resolves after given time.
- *
- * @param {string} name - A name.
- * @param {number=} [delay=Delays.Medium] - Number of milliseconds to delay resolution of the Promise.
- * @returns {Promise<string>}
- */
-function delayedHello(
-  name: string,
-  delay: number = Delays.Medium,
-): Promise<string> {
-  return new Promise((resolve: (value?: string) => void) =>
-    setTimeout(() => resolve(`Hello, ${name}`), delay),
+function start(): void {
+  const processFileRecords = readProcessesFile();
+  const processes = processFileRecords.map(
+    ({ id, fullName }) => new Process(id, fullName),
   );
+  console.log(processes);
 }
 
-// Below are examples of using ESLint errors suppression
-// Here it is suppressing missing return type definitions for greeter function
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function greeter(name: string) {
-  return await delayedHello(name, Delays.Long);
-}
+start();
