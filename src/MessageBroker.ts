@@ -16,7 +16,7 @@ class MessageBroker extends EventEmitter {
         logger.debug(`[${String(event)}] ${util.inspect(msg)}`);
         break;
       default:
-        logger.info(`[${String(event)}] ${util.inspect(msg)}`);
+        logger.verbose(`Process ${msg.fromId}: ${msg.type}`);
         break;
     }
     return super.emit(event, ...args);

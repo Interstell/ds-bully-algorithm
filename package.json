@@ -34,6 +34,9 @@
   "author": "UT CS",
   "license": "MIT",
   "dependencies": {
+    "console-table-printer": "^1.4.12",
+    "inquirer": "^7.1.0",
+    "lodash": "^4.17.15",
     "minimist": "^1.2.5",
     "tslib": "~1.10.0",
     "winston": "^3.2.1"

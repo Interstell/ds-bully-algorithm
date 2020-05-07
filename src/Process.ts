@@ -6,6 +6,7 @@ const COORDINATOR_PING_INTERVAL = 2000; // ms here and below
 const TIME_TO_WAIT_FOR_COORDINATOR_PONG = 1000;
 const TIME_TO_WAIT_FOR_ELECTIONS_ALIVE_MESSAGE = 2000;
 const TIME_TO_WAIT_FOR_VICTORY = 5000;
+const MAX_TIME_TILL_NEW_PROCESS_STARTS_PINGING = 2000;
 
 const BROADCAST_EVENT_NAME = 'GENERAL';
 
@@ -19,6 +20,9 @@ export default class Process {
 
   constructor(public id: number, public shortName: string, public counter = 0) {
     this.inboxEventName = `MESSAGE-TO-${id}`;
+  }
+
+  start(): void {
     MessageBroker.on(this.inboxEventName, this.onMessageReceived);
     MessageBroker.on(BROADCAST_EVENT_NAME, this.onMessageReceived);
 
@@ -27,11 +31,15 @@ export default class Process {
         this.pingCoordinator,
         COORDINATOR_PING_INTERVAL,
       );
-    }, Math.random() * 1000);
+    }, Math.random() * MAX_TIME_TILL_NEW_PROCESS_STARTS_PINGING);
   }
 
   get name(): string {
-    return `${this.shortName}_${this.counter}`;
+    return `${this.shortName}_${Math.max(this.counter, 0)}`;
+  }
+
+  isCoordinator(): boolean {
+    return this.id === this.coordinatorId;
   }
 
   onMessageReceived = (msg: Message): void => {
@@ -118,6 +126,9 @@ export default class Process {
         fromId: this.id,
         type: MessageType.Alive,
       } as Message);
+      if (this.state == ProcessState.Idle || this.state == ProcessState.WaitingForCoordinatorPong) {
+        this.announceElection();
+      }
     }
   };
 
@@ -157,16 +168,9 @@ export default class Process {
 
   kill = (): void => {
     this.state = ProcessState.Dead;
+    this.coordinatorId = null;
     clearInterval(this.pingInterval);
     MessageBroker.off(this.inboxEventName, this.onMessageReceived);
     MessageBroker.off(BROADCAST_EVENT_NAME, this.onMessageReceived);
-  };
-
-  toString = (): string => {
-    return `${this.id} | ${this.name} | coord: ${this.coordinatorId} | st: ${this.state} | K ${this.counter}`;
-  };
-
-  log = (): void => {
-    console.log(String(this));
   };
 }
