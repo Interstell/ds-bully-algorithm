@@ -9,7 +9,7 @@
 
 ## How to build
 - `npm install`
-- `npm run buld`
+- `npm run build`
 
 ## How to start
 - `node build/src/index.js processes.csv` (or any other `processes_file` in the project directory)
