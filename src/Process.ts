@@ -27,10 +27,7 @@ export default class Process {
     MessageBroker.on(BROADCAST_EVENT_NAME, this.onMessageReceived);
 
     setTimeout(() => {
-      this.pingInterval = setInterval(
-        this.pingCoordinator,
-        COORDINATOR_PING_INTERVAL,
-      );
+      this.pingInterval = setInterval(this.pingCoordinator, COORDINATOR_PING_INTERVAL);
     }, Math.random() * MAX_TIME_TILL_NEW_PROCESS_STARTS_PINGING);
   }
 
@@ -134,10 +131,7 @@ export default class Process {
 
   onElectionAliveMessageReceived = (msg: Message): void => {
     // 5. However, if an answer is received within time T from any other process Q
-    if (
-      msg.fromId > this.id &&
-      this.state === ProcessState.WaitingForElectionsAlive
-    ) {
+    if (msg.fromId > this.id && this.state === ProcessState.WaitingForElectionsAlive) {
       this.state = ProcessState.WaitingForVictory;
       // 5. (I) Process P again waits for time interval T’
       // to receive another message from Q that it has been elected as coordinator.
