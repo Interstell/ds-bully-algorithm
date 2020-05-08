@@ -5,12 +5,13 @@ import * as minimist from 'minimist';
 import * as inquirer from 'inquirer';
 import { Table } from 'console-table-printer';
 
-import { ProcessFileRecord } from './System.types';
+import { Message, MessageType, ProcessFileRecord } from './System.types';
 import Process from './Process';
 import logger, { setLoggingLevel } from './logger';
 import { LoggingLevel } from './logger.types';
+import MessageBroker, { BROADCAST_EVENT_NAME } from './MessageBroker';
 
-const UI_TIME_TO_WAIT_FOR_VICTORY = 7000; // ms
+const UI_MAX_TIME_TO_WAIT_FOR_VICTORY = 10000; // ms
 
 export class System {
   processes: Process[];
@@ -72,13 +73,15 @@ export class System {
         type: 'list',
         name: 'main',
         message: '> Enter your command:',
-        choices: ['list', 'kill', 'reload', 'exit'],
+        choices: ['list', 'kill', 'reload', 'benchmark', 'exit'],
       },
     ]);
     switch (answer) {
-      case 'list':
+      case 'list': {
         this.listProcesses();
         break;
+      }
+
       case 'kill': {
         const { pid } = await inquirer.prompt([
           {
@@ -101,12 +104,21 @@ export class System {
         await this.killProcess(pid);
         break;
       }
-      case 'reload':
+
+      case 'reload': {
         await this.reload();
         break;
-      case 'exit':
+      }
+
+      case 'benchmark': {
+        await this.benchmark();
+        break;
+      }
+
+      case 'exit': {
         process.exit(0);
         break;
+      }
     }
     setImmediate(this.startUI);
   };
@@ -145,7 +157,7 @@ export class System {
       logger.info(
         `Process PID ${pid} killed. It was a coordinator, so the election will start soon.`,
       );
-      await this.wait(UI_TIME_TO_WAIT_FOR_VICTORY);
+      await this.waitForVictoryWithTimeout();
       setLoggingLevel(LoggingLevel.info);
     } else {
       logger.info(
@@ -157,15 +169,16 @@ export class System {
 
   reload = async (): Promise<void> => {
     const reloadedProcessRecords = this.readProcessesFile();
-
     const newRecords: ProcessFileRecord[] = _.differenceBy(
       reloadedProcessRecords,
       this.processes,
       p => p.id,
     );
 
-    if (newRecords.length === 0){
-      logger.info('No new processes were read from the processes_file. New election will not happen.')
+    if (newRecords.length === 0) {
+      logger.info(
+        'No new processes were found in the processes_file. New election will not happen.',
+      );
       return;
     }
 
@@ -174,13 +187,70 @@ export class System {
     this.processes.push(...newProcesses);
     newProcesses.forEach(p => p.start());
 
+    logger.info(
+      `Reload completed. New processes added: ${newProcesses.length}. Election will start soon.`,
+    );
+
     setLoggingLevel(LoggingLevel.verbose);
-    await this.wait(UI_TIME_TO_WAIT_FOR_VICTORY);
+    await this.waitForVictoryWithTimeout();
     setLoggingLevel(LoggingLevel.info);
+  };
+
+  benchmark = async (): Promise<void> => {
+    // pausing current processes
+    this.processes.forEach(p => p.kill());
+
+    for (let N = 10; N <= 100; N += 10) {
+      // creating N processes
+      const processFileRecords: ProcessFileRecord[] = _.times(
+        N,
+        i =>
+          ({
+            id: i + 1,
+            fullName: `PID${i + 1}_0`,
+          } as ProcessFileRecord),
+      );
+      const processes = this.createProcesses(processFileRecords);
+
+      // measuring time
+      const label = `Election time for ${N} processes`;
+      console.time(label);
+
+      processes.forEach(p => p.start());
+      await this.waitForVictory();
+
+      console.timeEnd(label);
+
+      // killing created processes
+      await this.wait(2000);
+      processes.forEach(p => p.kill());
+    }
+
+    // returning current processes back to normal
+    this.processes.forEach(p => p.start());
+    this.processes.forEach(p => (p.counter -= 1));
   };
 
   wait = async (time = 1000): Promise<void> => {
     return new Promise(resolve => setTimeout(resolve, time));
+  };
+
+  waitForVictory = async (): Promise<void> => {
+    await new Promise(resolve => {
+      const cb = (msg: Message): void => {
+        if (msg.type === MessageType.Victory) {
+          MessageBroker.off(BROADCAST_EVENT_NAME, cb);
+          resolve();
+        }
+      };
+      MessageBroker.on(BROADCAST_EVENT_NAME, cb);
+    });
+  };
+
+  waitForVictoryWithTimeout = async (
+    timeout = UI_MAX_TIME_TO_WAIT_FOR_VICTORY,
+  ): Promise<void> => {
+    return Promise.race([this.waitForVictory(), this.wait(timeout)]);
   };
 
   start(): void {

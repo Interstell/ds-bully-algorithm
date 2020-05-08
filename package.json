@@ -2,24 +2,37 @@
   "name": "ds-bully-algorithm",
   "version": "0.0.1",
   "description": "ds-bully-algorithm",
+  "author": "Dmitry Urukov <https://github.com/Interstell>",
+  "contributors": [
+    "Karl-Gustav Kallasmaa <https://github.com/KGKallasmaa>"
+  ],
+  "license": "MIT",
   "engines": {
-    "node": ">= 12.13 <13"
+    "node": ">= 12.13"
   },
   "devDependencies": {
-    "@types/jest": "~25.1.2",
-    "@types/node": "~12.12.27",
+    "@types/jest": "^25.1.5",
+    "@types/node": "^12.12.38",
     "@typescript-eslint/eslint-plugin": "~2.19.2",
     "@typescript-eslint/parser": "~2.19.2",
     "eslint": "~6.8.0",
-    "eslint-config-prettier": "~6.10.0",
+    "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-jest": "~23.7.0",
     "jest": "~25.1.0",
     "nodemon": "^2.0.3",
     "prettier": "~1.19.1",
     "rimraf": "~3.0.2",
-    "ts-jest": "~25.2.0",
+    "ts-jest": "^25.5.0",
     "tsutils": "~3.17.0",
-    "typescript": "~3.8.2"
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "console-table-printer": "^1.4.12",
+    "inquirer": "^7.1.0",
+    "lodash": "^4.17.15",
+    "minimist": "^1.2.5",
+    "tslib": "~1.10.0",
+    "winston": "^3.2.1"
   },
   "scripts": {
     "start": "node build/src/index.js processes.csv",
@@ -30,15 +43,5 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "dev": "npm run build:watch & nodemon -q -w build build/src/index.js processes.csv"
-  },
-  "author": "UT CS",
-  "license": "MIT",
-  "dependencies": {
-    "console-table-printer": "^1.4.12",
-    "inquirer": "^7.1.0",
-    "lodash": "^4.17.15",
-    "minimist": "^1.2.5",
-    "tslib": "~1.10.0",
-    "winston": "^3.2.1"
   }
 }
