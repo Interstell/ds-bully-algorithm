@@ -8,7 +8,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">= 14.0"
+    "node": ">= 12.13"
   },
   "devDependencies": {
     "@types/jest": "^25.1.5",
@@ -42,16 +42,6 @@
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
     "test:watch": "jest --watch",
-    "dev": "npm run build:watch & nodemon -q -w build build/src/index.js processes.csv",
-    "format": "prettier --write \"src/**/*.ts\""
-  },
-  "prettier": {
-    "printWidth": 120,
-    "singleQuote": true,
-    "trailingComma": "es5",
-    "semi": true,
-    "bracketSpacing": true,
-    "arrowParens": "always",
-    "endOfLine": "lf"
+    "dev": "npm run build:watch & nodemon -q -w build build/src/index.js processes.csv"
   }
 }

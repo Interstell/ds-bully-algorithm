@@ -4,9 +4,12 @@ import { EventEmitter } from 'events';
 import { Message, MessageType } from './System.types';
 import logger from './logger';
 
+export const BROADCAST_EVENT_NAME = 'GENERAL';
+
 class MessageBroker extends EventEmitter {
   constructor() {
     super();
+    this.setMaxListeners(10000);
   }
   emit(event: string | symbol, ...args): boolean {
     const msg: Message = args[0];

@@ -1,4 +1,4 @@
-import MessageBroker from './MessageBroker';
+import MessageBroker, { BROADCAST_EVENT_NAME } from './MessageBroker';
 import { Message, MessageType } from './System.types';
 import { ProcessState } from './Process.types';
 
@@ -7,8 +7,6 @@ const TIME_TO_WAIT_FOR_COORDINATOR_PONG = 1000;
 const TIME_TO_WAIT_FOR_ELECTIONS_ALIVE_MESSAGE = 2000;
 const TIME_TO_WAIT_FOR_VICTORY = 5000;
 const MAX_TIME_TILL_NEW_PROCESS_STARTS_PINGING = 2000;
-
-const BROADCAST_EVENT_NAME = 'GENERAL';
 
 // Implementation reference:
 // https://www.geeksforgeeks.org/election-algorithm-and-distributed-processing/
@@ -23,11 +21,15 @@ export default class Process {
   }
 
   start(): void {
+    this.state = ProcessState.Idle;
     MessageBroker.on(this.inboxEventName, this.onMessageReceived);
     MessageBroker.on(BROADCAST_EVENT_NAME, this.onMessageReceived);
 
     setTimeout(() => {
-      this.pingInterval = setInterval(this.pingCoordinator, COORDINATOR_PING_INTERVAL);
+      this.pingInterval = setInterval(
+        this.pingCoordinator,
+        COORDINATOR_PING_INTERVAL,
+      );
     }, Math.random() * MAX_TIME_TILL_NEW_PROCESS_STARTS_PINGING);
   }
 
@@ -123,7 +125,10 @@ export default class Process {
         fromId: this.id,
         type: MessageType.Alive,
       } as Message);
-      if (this.state == ProcessState.Idle || this.state == ProcessState.WaitingForCoordinatorPong) {
+      if (
+        this.state == ProcessState.Idle ||
+        this.state == ProcessState.WaitingForCoordinatorPong
+      ) {
         this.announceElection();
       }
     }
@@ -131,7 +136,10 @@ export default class Process {
 
   onElectionAliveMessageReceived = (msg: Message): void => {
     // 5. However, if an answer is received within time T from any other process Q
-    if (msg.fromId > this.id && this.state === ProcessState.WaitingForElectionsAlive) {
+    if (
+      msg.fromId > this.id &&
+      this.state === ProcessState.WaitingForElectionsAlive
+    ) {
       this.state = ProcessState.WaitingForVictory;
       // 5. (I) Process P again waits for time interval T’
       // to receive another message from Q that it has been elected as coordinator.
