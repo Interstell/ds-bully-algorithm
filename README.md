@@ -1,4 +1,4 @@
-# Bully Algorithm Visualization
+# Bully Algorithm Simulation
 
 <img src="interface.png" width="50%"  alt="screenshot"/>
 
